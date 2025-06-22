@@ -36,45 +36,87 @@ const TravelResults: React.FC<TravelResultsProps> = ({ travelPlan, isLoading }) 
     }
   };
 
-  const formatTravelPlan = (plan: string) => {
-    if (!plan) return null;
+  const formatMarkdownContent = (content: string) => {
+    if (!content) return null;
     
-    // Split by lines and format
-    const lines = plan.split('\n').filter(line => line.trim());
+    const lines = content.split('\n');
+    const formattedElements: React.ReactNode[] = [];
     
-    return lines.map((line, index) => {
+    lines.forEach((line, index) => {
       const trimmedLine = line.trim();
       
-      // Headers (usually contain Day, ## or **text**)
-      if (trimmedLine.match(/^(Day \d+|##|\*\*.*\*\*|# )/)) {
-        return (
-          <h3 key={index} className="text-lg font-semibold text-gray-800 mt-6 mb-3 first:mt-0">
-            {trimmedLine.replace(/[#*]/g, '').trim()}
-          </h3>
-        );
-      }
+      if (!trimmedLine) return;
       
-      // Sub-headers or time entries
-      if (trimmedLine.match(/^\d+:\d+|^Morning|^Afternoon|^Evening|^\* /)) {
-        return (
-          <div key={index} className="flex items-start gap-3 mb-3">
-            <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
-            <p className="text-gray-700 leading-relaxed">{trimmedLine.replace(/^\* /, '')}</p>
+      // Main headers (# Header or **Header**)
+      if (trimmedLine.match(/^#+\s/) || trimmedLine.match(/^\*\*[^*]+\*\*$/)) {
+        const headerText = trimmedLine.replace(/^#+\s|^\*\*|\*\*$/g, '');
+        const headerLevel = trimmedLine.startsWith('#') ? trimmedLine.match(/^#+/)?.[0].length || 1 : 2;
+        
+        formattedElements.push(
+          <div key={index} className={`${headerLevel === 1 ? 'text-xl font-bold text-gray-900 mt-8 mb-4 first:mt-0' : 'text-lg font-semibold text-gray-800 mt-6 mb-3 first:mt-0'} border-b border-gray-200 pb-2`}>
+            {headerText}
           </div>
         );
       }
-      
+      // Day headers (Day 1, Day 2, etc.)
+      else if (trimmedLine.match(/^Day\s+\d+/i)) {
+        formattedElements.push(
+          <div key={index} className="bg-gradient-to-r from-blue-50 to-orange-50 rounded-lg p-4 mt-6 mb-4 first:mt-0">
+            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                {trimmedLine.match(/\d+/)?.[0]}
+              </div>
+              {trimmedLine}
+            </h3>
+          </div>
+        );
+      }
+      // Bullet points or list items
+      else if (trimmedLine.match(/^[-*]\s/) || trimmedLine.match(/^\d+\.\s/)) {
+        const listText = trimmedLine.replace(/^[-*]\s|\d+\.\s/, '');
+        formattedElements.push(
+          <div key={index} className="flex items-start gap-3 mb-3 ml-4">
+            <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-700 leading-relaxed">{listText}</p>
+          </div>
+        );
+      }
+      // Time-based entries (9:00 AM, Morning, etc.)
+      else if (trimmedLine.match(/^\d{1,2}:\d{2}\s*(AM|PM)|^(Morning|Afternoon|Evening)/i)) {
+        formattedElements.push(
+          <div key={index} className="bg-white border-l-4 border-blue-400 pl-4 py-2 mb-3 ml-2">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-500" />
+              <p className="text-gray-800 font-medium">{trimmedLine}</p>
+            </div>
+          </div>
+        );
+      }
+      // Bold text (**text**)
+      else if (trimmedLine.includes('**')) {
+        const parts = trimmedLine.split(/(\*\*[^*]+\*\*)/);
+        formattedElements.push(
+          <p key={index} className="text-gray-700 mb-3 leading-relaxed">
+            {parts.map((part, partIndex) => {
+              if (part.startsWith('**') && part.endsWith('**')) {
+                return <strong key={partIndex} className="font-semibold text-gray-800">{part.slice(2, -2)}</strong>;
+              }
+              return part;
+            })}
+          </p>
+        );
+      }
       // Regular paragraphs
-      if (trimmedLine.length > 0) {
-        return (
+      else {
+        formattedElements.push(
           <p key={index} className="text-gray-600 mb-3 leading-relaxed">
             {trimmedLine}
           </p>
         );
       }
-      
-      return null;
     });
+    
+    return formattedElements;
   };
 
   if (isLoading) {
@@ -174,7 +216,7 @@ const TravelResults: React.FC<TravelResultsProps> = ({ travelPlan, isLoading }) 
           </div>
           
           <div className="space-y-2">
-            {formatTravelPlan(travelPlan)}
+            {formatMarkdownContent(travelPlan)}
           </div>
         </div>
       </CardContent>
