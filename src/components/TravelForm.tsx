@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, DollarSign, Users, Heart, Sparkles, Plane } from 'lucide-react';
+import { Calendar, DollarSign, Users, Heart, Sparkles, Plane, Key } from 'lucide-react';
 import { generateTravelPlan } from '../utils/geminiApi';
+import { fetchFlightData, getCityAirportCode } from '../utils/serpApi';
 import { useToast } from '@/hooks/use-toast';
 import type { TravelFormData, FlightData } from '../pages/Index';
 
@@ -34,7 +35,8 @@ const TravelForm: React.FC<TravelFormProps> = ({ onPlanGenerated, onLoadingChang
     interests: [],
     includeTransportation: false
   });
-  const [apiKey, setApiKey] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [serpApiKey, setSerpApiKey] = useState('');
 
   const handleInputChange = (field: keyof TravelFormData, value: string | string[] | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -49,227 +51,22 @@ const TravelForm: React.FC<TravelFormProps> = ({ onPlanGenerated, onLoadingChang
     }));
   };
 
-  // Mock flight data function
-  const getMockFlightData = (): FlightData => {
-    return {
-      "best_flights": [
-        {
-          "flights": [
-            {
-              "departure_airport": {
-                "name": "Chhatrapati Shivaji Maharaj International Airport Mumbai",
-                "id": "BOM",
-                "time": "2025-07-01 00:40"
-              },
-              "arrival_airport": {
-                "name": "Noi Bai International Airport",
-                "id": "HAN",
-                "time": "2025-07-01 07:10"
-              },
-              "duration": 300,
-              "airplane": "Airbus A321",
-              "airline": "Vietjet",
-              "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/VJ.png",
-              "travel_class": "Economy",
-              "flight_number": "VJ 910",
-              "legroom": "28 in",
-              "extensions": [
-                "Below average legroom (28 in)",
-                "Carbon emissions estimate: 268 kg"
-              ],
-              "overnight": true
-            },
-            {
-              "departure_airport": {
-                "name": "Noi Bai International Airport",
-                "id": "HAN",
-                "time": "2025-07-01 10:05"
-              },
-              "arrival_airport": {
-                "name": "I Gusti Ngurah Rai International Airport",
-                "id": "DPS",
-                "time": "2025-07-01 16:25"
-              },
-              "duration": 320,
-              "airplane": "Airbus A321",
-              "airline": "Vietjet",
-              "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/VJ.png",
-              "travel_class": "Economy",
-              "flight_number": "VJ 997",
-              "legroom": "28 in",
-              "extensions": [
-                "Below average legroom (28 in)",
-                "Carbon emissions estimate: 293 kg"
-              ]
-            }
-          ],
-          "layovers": [
-            {
-              "duration": 175,
-              "name": "Noi Bai International Airport",
-              "id": "HAN"
-            }
-          ],
-          "total_duration": 795,
-          "carbon_emissions": {
-            "this_flight": 562000,
-            "typical_for_this_route": 468000,
-            "difference_percent": 20
-          },
-          "price": 455,
-          "type": "Round trip",
-          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/VJ.png",
-          "departure_token": "WyJDalJJWjNsclFuSklRMmhCTm05QlNXSTNXSGRDUnkwdExTMHRMUzB0YjNsamFHWXlOa0ZCUVVGQlIyaFlYelV3VFRCcWVuVkJFZ3RXU2preE1IeFdTams1TnhvTENPbmlBaEFDR2dOVlUwUTRISERwNGdJPSIsW1siQk9NIiwiMjAyNS0wNy0wMSIsIkhBTiIsbnVsbCwiVkoiLCI5MTAiXSxbIkhBTiIsIjIwMjUtMDctMDEiLCJEUFMiLG51bGwsIlZKIiwiOTk3Il1dXQ=="
-        },
-        {
-          "flights": [
-            {
-              "departure_airport": {
-                "name": "Chhatrapati Shivaji Maharaj International Airport Mumbai",
-                "id": "BOM",
-                "time": "2025-07-01 01:45"
-              },
-              "arrival_airport": {
-                "name": "Don Mueang International Airport",
-                "id": "DMK",
-                "time": "2025-07-01 07:35"
-              },
-              "duration": 260,
-              "airplane": "Boeing 737",
-              "airline": "Thai Lion Air",
-              "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/SL.png",
-              "travel_class": "Economy",
-              "flight_number": "SL 219",
-              "legroom": "29 in",
-              "extensions": [
-                "Below average legroom (29 in)",
-                "Carbon emissions estimate: 218 kg"
-              ],
-              "overnight": true
-            },
-            {
-              "departure_airport": {
-                "name": "Don Mueang International Airport",
-                "id": "DMK",
-                "time": "2025-07-01 11:55"
-              },
-              "arrival_airport": {
-                "name": "I Gusti Ngurah Rai International Airport",
-                "id": "DPS",
-                "time": "2025-07-01 17:20"
-              },
-              "duration": 265,
-              "airplane": "Boeing 737",
-              "airline": "Thai Lion Air",
-              "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/SL.png",
-              "travel_class": "Economy",
-              "flight_number": "SL 258",
-              "legroom": "31 in",
-              "extensions": [
-                "Average legroom (31 in)",
-                "Carbon emissions estimate: 233 kg"
-              ]
-            }
-          ],
-          "layovers": [
-            {
-              "duration": 260,
-              "name": "Don Mueang International Airport",
-              "id": "DMK"
-            }
-          ],
-          "total_duration": 785,
-          "carbon_emissions": {
-            "this_flight": 451000,
-            "typical_for_this_route": 468000,
-            "difference_percent": -4
-          },
-          "price": 504,
-          "type": "Round trip",
-          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/SL.png",
-          "departure_token": "WyJDalJJWjNsclFuSklRMmhCTm05QlNXSTNXSGRDUnkwdExTMHRMUzB0YjNsamFHWXlOa0ZCUVVGQlIyaFlYelV3VFRCcWVuVkJFZ3RUVERJeE9YeFRUREkxT0JvTENKcUpBeEFDR2dOVlUwUTRISENhaVFNPSIsW1siQk9NIiwiMjAyNS0wNy0wMSIsIkRNSyIsbnVsbCwiU0wiLCIyMTkiXSxbIkRNSyIsIjIwMjUtMDctMDEiLCJEUFMiLG51bGwsIlNMIiwiMjU4Il1dXQ=="
-        },
-        {
-          "flights": [
-            {
-              "departure_airport": {
-                "name": "Chhatrapati Shivaji Maharaj International Airport Mumbai",
-                "id": "BOM",
-                "time": "2025-07-01 02:40"
-              },
-              "arrival_airport": {
-                "name": "Suvarnabhumi Airport",
-                "id": "BKK",
-                "time": "2025-07-01 08:40"
-              },
-              "duration": 270,
-              "airplane": "Airbus A320",
-              "airline": "THAI",
-              "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TG.png",
-              "travel_class": "Economy",
-              "flight_number": "TG 352",
-              "legroom": "30 in",
-              "extensions": [
-                "Average legroom (30 in)",
-                "Stream media to your device",
-                "Carbon emissions estimate: 295 kg"
-              ],
-              "overnight": true
-            },
-            {
-              "departure_airport": {
-                "name": "Suvarnabhumi Airport",
-                "id": "BKK",
-                "time": "2025-07-01 12:40"
-              },
-              "arrival_airport": {
-                "name": "I Gusti Ngurah Rai International Airport",
-                "id": "DPS",
-                "time": "2025-07-01 18:00"
-              },
-              "duration": 260,
-              "airplane": "Airbus A320",
-              "airline": "THAI",
-              "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TG.png",
-              "travel_class": "Economy",
-              "flight_number": "TG 439",
-              "legroom": "30 in",
-              "extensions": [
-                "Average legroom (30 in)",
-                "Stream media to your device",
-                "Carbon emissions estimate: 288 kg"
-              ]
-            }
-          ],
-          "layovers": [
-            {
-              "duration": 240,
-              "name": "Suvarnabhumi Airport",
-              "id": "BKK"
-            }
-          ],
-          "total_duration": 770,
-          "carbon_emissions": {
-            "this_flight": 584000,
-            "typical_for_this_route": 468000,
-            "difference_percent": 25
-          },
-          "price": 689,
-          "type": "Round trip",
-          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/TG.png",
-          "departure_token": "WyJDalJJWjNsclFuSklRMmhCTm05QlNXSTNXSGRDUnkwdExTMHRMUzB0YjNsamFHWXlOa0ZCUVVGQlIyaFlYelV3VFRCcWVuVkJFZ3RVUnpNMU1ueFVSelF6T1JvTENJdWFCQkFDR2dOVlUwUTRISENMbWdRPSIsW1siQk9NIiwiMjAyNS0wNy0wMSIsIkJLSyIsbnVsbCwiVEciLCIzNTIiXSxbIkJLSyIsIjIwMjUtMDctMDEiLCJEUFMiLG51bGwsIlRHIiwiNDM5Il1dXQ=="
-        }
-      ]
-    };
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!apiKey.trim()) {
+    if (!geminiApiKey.trim()) {
       toast({
-        title: "API Key Required",
+        title: "Gemini API Key Required",
         description: "Please enter your Gemini API key to generate travel plans.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.includeTransportation && !serpApiKey.trim()) {
+      toast({
+        title: "SerpAPI Key Required",
+        description: "Please enter your SerpAPI key to get flight information.",
         variant: "destructive"
       });
       return;
@@ -286,8 +83,35 @@ const TravelForm: React.FC<TravelFormProps> = ({ onPlanGenerated, onLoadingChang
 
     try {
       onLoadingChange(true);
-      const plan = await generateTravelPlan(formData, apiKey);
-      const flights = formData.includeTransportation ? getMockFlightData() : undefined;
+      
+      // Generate travel plan
+      const plan = await generateTravelPlan(formData, geminiApiKey);
+      
+      let flights: FlightData | undefined;
+      
+      // Fetch flight data if transportation is included
+      if (formData.includeTransportation) {
+        try {
+          const sourceCode = getCityAirportCode(formData.source);
+          const destinationCode = getCityAirportCode(formData.destination);
+          
+          flights = await fetchFlightData(
+            sourceCode,
+            destinationCode,
+            formData.startDate,
+            formData.endDate,
+            serpApiKey
+          );
+        } catch (flightError) {
+          console.error('Flight data error:', flightError);
+          toast({
+            title: "Flight Data Warning",
+            description: "Travel plan generated, but flight data could not be retrieved. Please check your SerpAPI key.",
+            variant: "destructive"
+          });
+        }
+      }
+      
       onPlanGenerated(plan, flights);
       toast({
         title: "Success!",
@@ -297,7 +121,7 @@ const TravelForm: React.FC<TravelFormProps> = ({ onPlanGenerated, onLoadingChang
       console.error('Error generating travel plan:', error);
       toast({
         title: "Error",
-        description: "Failed to generate travel plan. Please check your API key and try again.",
+        description: "Failed to generate travel plan. Please check your API keys and try again.",
         variant: "destructive"
       });
     } finally {
@@ -315,22 +139,47 @@ const TravelForm: React.FC<TravelFormProps> = ({ onPlanGenerated, onLoadingChang
       </CardHeader>
       <CardContent className="space-y-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* API Key Input */}
-          <div className="space-y-2">
-            <Label htmlFor="apiKey" className="text-sm font-medium text-gray-700">
-              Gemini API Key *
-            </Label>
-            <Input
-              id="apiKey"
-              type="password"
-              placeholder="Enter your Gemini API key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
-            />
-            <p className="text-xs text-gray-500">
-              Get your API key from Google AI Studio
-            </p>
+          {/* API Keys Section */}
+          <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
+            <div className="flex items-center gap-2 mb-2">
+              <Key className="h-4 w-4 text-gray-600" />
+              <h3 className="text-sm font-semibold text-gray-700">API Keys</h3>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="geminiApiKey" className="text-sm font-medium text-gray-700">
+                Gemini API Key *
+              </Label>
+              <Input
+                id="geminiApiKey"
+                type="password"
+                placeholder="Enter your Gemini API key"
+                value={geminiApiKey}
+                onChange={(e) => setGeminiApiKey(e.target.value)}
+                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+              />
+              <p className="text-xs text-gray-500">
+                Get your API key from Google AI Studio
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="serpApiKey" className="text-sm font-medium text-gray-700">
+                SerpAPI Key {formData.includeTransportation && '*'}
+              </Label>
+              <Input
+                id="serpApiKey"
+                type="password"
+                placeholder="Enter your SerpAPI key"
+                value={serpApiKey}
+                onChange={(e) => setSerpApiKey(e.target.value)}
+                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                disabled={!formData.includeTransportation}
+              />
+              <p className="text-xs text-gray-500">
+                Required only for flight information from SerpAPI
+              </p>
+            </div>
           </div>
 
           {/* Source and Destination */}
@@ -341,7 +190,7 @@ const TravelForm: React.FC<TravelFormProps> = ({ onPlanGenerated, onLoadingChang
               </Label>
               <Input
                 id="source"
-                placeholder="e.g., New York, NY"
+                placeholder="e.g., Mumbai, New York"
                 value={formData.source}
                 onChange={(e) => handleInputChange('source', e.target.value)}
                 className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
@@ -353,7 +202,7 @@ const TravelForm: React.FC<TravelFormProps> = ({ onPlanGenerated, onLoadingChang
               </Label>
               <Input
                 id="destination"
-                placeholder="e.g., Paris, France"
+                placeholder="e.g., Bali, Paris"
                 value={formData.destination}
                 onChange={(e) => handleInputChange('destination', e.target.value)}
                 className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
@@ -432,11 +281,11 @@ const TravelForm: React.FC<TravelFormProps> = ({ onPlanGenerated, onLoadingChang
               />
               <Label htmlFor="includeTransportation" className="text-sm font-medium text-gray-700 flex items-center gap-2 cursor-pointer">
                 <Plane className="h-4 w-4" />
-                Include Transportation Details
+                Include Real Flight Data
               </Label>
             </div>
             <p className="text-xs text-gray-500 ml-6">
-              Get flight options and pricing information for your trip
+              Get live flight options and pricing from SerpAPI
             </p>
           </div>
 

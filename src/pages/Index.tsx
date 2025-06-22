@@ -52,6 +52,8 @@ export interface FlightData {
     price: number;
     type: string;
     airline_logo: string;
+    departure_token?: string;
+    booking_token?: string;
   }>;
 }
 
@@ -84,7 +86,7 @@ const Index = () => {
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">
                 AI Travel Planner
               </h1>
-              <p className="text-gray-600 text-sm">Powered by Gemini AI</p>
+              <p className="text-gray-600 text-sm">Powered by Gemini AI & SerpAPI</p>
             </div>
           </div>
         </div>
@@ -99,7 +101,7 @@ const Index = () => {
               <h2 className="text-xl text-gray-700">Plan Your Perfect Trip</h2>
             </div>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Tell us about your travel preferences and let our AI create a personalized itinerary just for you.
+              Tell us about your travel preferences and let our AI create a personalized itinerary with real flight options.
             </p>
           </div>
 
