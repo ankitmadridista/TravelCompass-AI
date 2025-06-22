@@ -12,14 +12,59 @@ export interface TravelFormData {
   budget: string;
   travelers: string;
   interests: string[];
+  includeTransportation: boolean;
+}
+
+export interface FlightData {
+  best_flights: Array<{
+    flights: Array<{
+      departure_airport: {
+        name: string;
+        id: string;
+        time: string;
+      };
+      arrival_airport: {
+        name: string;
+        id: string;
+        time: string;
+      };
+      duration: number;
+      airplane: string;
+      airline: string;
+      airline_logo: string;
+      travel_class: string;
+      flight_number: string;
+      legroom: string;
+      extensions: string[];
+      overnight?: boolean;
+    }>;
+    layovers: Array<{
+      duration: number;
+      name: string;
+      id: string;
+    }>;
+    total_duration: number;
+    carbon_emissions: {
+      this_flight: number;
+      typical_for_this_route: number;
+      difference_percent: number;
+    };
+    price: number;
+    type: string;
+    airline_logo: string;
+  }>;
 }
 
 const Index = () => {
   const [travelPlan, setTravelPlan] = useState<string>('');
+  const [flightData, setFlightData] = useState<FlightData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handlePlanGenerated = (plan: string) => {
+  const handlePlanGenerated = (plan: string, flights?: FlightData) => {
     setTravelPlan(plan);
+    if (flights) {
+      setFlightData(flights);
+    }
   };
 
   const handleLoadingChange = (loading: boolean) => {
@@ -71,6 +116,7 @@ const Index = () => {
             <div className="space-y-6">
               <TravelResults 
                 travelPlan={travelPlan}
+                flightData={flightData}
                 isLoading={isLoading}
               />
             </div>
