@@ -29,7 +29,7 @@ export function Chat({ itinerary }: ChatProps) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `You are a helpful travel assistant. The user has the following itinerary:
 
