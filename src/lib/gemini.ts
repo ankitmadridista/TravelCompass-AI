@@ -129,7 +129,11 @@ async function fetchFlights(source: string, destination: string, date: string) {
     airportCodes[destination.toLowerCase()] || destination.toUpperCase();
 
   // Use serverless function to avoid CORS
-  const functionUrl = `http://localhost:3001/.netlify/functions/flights?departure_id=${sourceCode}&arrival_id=${destCode}&outbound_date=${date}&api_key=${apiKey}`;
+  // In production (Vercel), use relative path. In local dev, use localhost
+  const isProduction = window.location.hostname !== 'localhost';
+  const functionUrl = isProduction 
+    ? `/.netlify/functions/flights?departure_id=${sourceCode}&arrival_id=${destCode}&outbound_date=${date}&api_key=${apiKey}`
+    : `http://localhost:3001/.netlify/functions/flights?departure_id=${sourceCode}&arrival_id=${destCode}&outbound_date=${date}&api_key=${apiKey}`;
 
   try {
     const response = await fetch(functionUrl);
