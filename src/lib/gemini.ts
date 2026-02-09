@@ -51,7 +51,7 @@ export type BestFlight = {
 };
 
 async function fetchFlights(source: string, destination: string, date: string) {
-  const apiKey = import.meta.env.VITE_SERPAPI_API_KEY;
+  const apiKey = localStorage.getItem("SERPAPI_KEY") || import.meta.env.VITE_SERPAPI_API_KEY;
   if (!apiKey) {
     throw new Error("SerpAPI key not found. Please add it in settings.");
   }
@@ -128,16 +128,11 @@ async function fetchFlights(source: string, destination: string, date: string) {
   const destCode =
     airportCodes[destination.toLowerCase()] || destination.toUpperCase();
 
-  const serpApiUrl = `https://serpapi.com/search.json?engine=google_flights&type=2&departure_id=${sourceCode}&arrival_id=${destCode}&outbound_date=${date}&currency=USD&hl=en&api_key=${apiKey}`;
-  const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${serpApiUrl}`;
+  // Use serverless function to avoid CORS
+  const functionUrl = `http://localhost:3001/.netlify/functions/flights?departure_id=${sourceCode}&arrival_id=${destCode}&outbound_date=${date}&api_key=${apiKey}`;
 
   try {
-    const response = await fetch(corsProxyUrl, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    const response = await fetch(functionUrl);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -233,7 +228,12 @@ async function fetchFlights(source: string, destination: string, date: string) {
 }
 
 export async function generateTravelPlan(preferences: TravelPreferences) {
-  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+  const apiKey = localStorage.getItem("GEMINI_API_KEY") || import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Gemini API key not found. Please add it in settings.");
+  }
+  
+  const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `Act as a travel planning expert. Create a detailed travel itinerary based on the following preferences:

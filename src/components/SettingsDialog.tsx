@@ -39,6 +39,10 @@ export function SettingsDialog() {
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
             Configure your API keys for the travel planner.
+            <br />
+            <span className="text-yellow-600 text-xs mt-2 block">
+              ⚠️ Keys are stored in browser localStorage. Only use your personal API keys.
+            </span>
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
