@@ -37,7 +37,7 @@ const Index = () => {
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold text-travel-primary">
-              AI Travel Planner
+              TravelCompass AI
             </h1>
             <SettingsDialog />
           </div>
