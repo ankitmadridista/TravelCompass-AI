@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -66,9 +67,13 @@ export function SettingsDialog() {
               placeholder="Enter your SerpAPI key"
             />
           </div>
-          <Button onClick={handleSave} className="w-full">
-            Save Settings
-          </Button>
+          <DialogClose>
+            <div>
+              <Button onClick={handleSave} className="w-full">
+                Save Settings
+              </Button>
+            </div>
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>

@@ -20,10 +20,16 @@ const Index = () => {
         title: "Success!",
         description: "Your travel plan has been generated.",
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      console.log('error',error);
+      let message = "Failed to generate travel plan. Please try again.1";
+
+      if (error instanceof Error) {
+        message = error.message;
+      }
       toast({
         title: "Error",
-        description: "Failed to generate travel plan. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {

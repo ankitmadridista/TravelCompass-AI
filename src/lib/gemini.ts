@@ -382,8 +382,20 @@ export async function generateTravelPlan(preferences: TravelPreferences) {
     }
 
     return plan;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error generating travel plan:", error);
-    throw new Error("Failed to generate travel plan. Please try again.");
+
+    let message = "Failed to generate travel plan. Please try again.";
+
+    if (error instanceof Error) {
+      // Gemini SDK puts the real API message inside error.message
+      if (error.message.includes("API key not valid")) {
+        message = "API key not valid. Please check your Gemini API key.";
+      } else {
+        message = error.message;
+      }
+    }
+
+    throw new Error(message);
   }
 }
