@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TravelPreferences } from "@/lib/gemini";
-import { hasValidString, shouldDisableButton } from "@/lib/utils";
+import { hasValidString, shouldDisableButton as isGeneratePlanDisabled } from "@/lib/utils";
 
 interface TravelFormProps {
   onSubmit: (preferences: TravelPreferences) => void;
@@ -23,8 +23,6 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
     interests: "",
     includeTransportation: false,
   });
-
-  const isPlanDisabled =  shouldDisableButton();  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +140,7 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
           Include transportation details
         </Label>
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading || isPlanDisabled}>
+      <Button type="submit" className="w-full" disabled={isLoading || isGeneratePlanDisabled()}>
         {isLoading ? "Generating Plan..." : "Plan My Trip"}
       </Button>
     </form>
