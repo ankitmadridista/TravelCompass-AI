@@ -151,16 +151,19 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
       </Button>
 
       {isGeneratePlanDisabled() && (
-        <Alert
-          variant="destructive"
-          icon={<XCircle className="h-5 w-5 shrink-0" />}
-        >
-          <AlertTitle>Error: API key(s) are missing</AlertTitle>
-          <AlertDescription className="flex items-center gap-2">
-            Configure your API keys for the travel planner to generate a plan.
-            Click on the <Settings className="h-4 w-4 inline" /> and save your
-            API keys.
-          </AlertDescription>
+        <Alert variant="destructive" icon={<XCircle className="h-5 w-5" />}>
+          <div className="flex flex-col gap-1 sm:gap-2">
+            <AlertTitle className="text-sm sm:text-base">
+              Error: API key(s) are missing
+            </AlertTitle>
+
+            <AlertDescription className="text-xs sm:text-sm leading-relaxed">
+              Configure your API keys for the travel planner to generate a plan.
+              Click on the{" "}
+              <Settings className="h-4 w-4 inline align-text-bottom" /> and save
+              your API keys.
+            </AlertDescription>
+          </div>
         </Alert>
       )}
     </form>
