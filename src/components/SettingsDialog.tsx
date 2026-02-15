@@ -41,6 +41,7 @@ export function SettingsDialog() {
           <DialogDescription>
             Configure your API keys for the travel planner.
             <br />
+            NOTE: This demo uses a BYOK (Bring Your Own Key) model to prevent API misuse and demonstrate secure backend handling of third-party APIs.
             <span className="text-yellow-600 text-xs mt-2 block">
               ⚠️ Keys are stored in browser localStorage. Only use your personal API keys.
             </span>
