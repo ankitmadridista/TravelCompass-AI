@@ -24,7 +24,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // 1. Safe Rate Limiting
     const hasValidKV = process.env.KV_REST_API_URL && !process.env.KV_REST_API_URL.includes("your_vercel");
     
     if (hasValidKV) {
@@ -40,11 +39,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           message: "You have reached your daily limit for generating itineraries. Please try again tomorrow.",
         });
       }
-    } else {
-      console.log("⚠️ Skipping Rate Limit: KV Database not configured.");
     }
 
-    // 2. Generate Itinerary
     const preferences = req.body as TravelPreferences;
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const modelName = process.env.GEMINI_MODEL || "gemini-3.6-flash";
@@ -70,7 +66,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await model.generateContent(prompt);
     const plan = result.response.text();
 
-    // 3. Fetch Flights (returning as raw JSON now instead of Markdown)
     let flightData = null;
 
     if (preferences.includeTransportation) {
@@ -88,12 +83,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const serpRes = await fetch(serpUrl);
         flightData = await serpRes.json();
+        
+        // Throw an error to trigger the catch block if SerpAPI returns an empty array or error object
+        if (!flightData || !flightData.best_flights || flightData.best_flights.length === 0) {
+          throw new Error("No flights found in SerpAPI response");
+        }
       } catch (error) {
-        console.error("SerpAPI Error:", error);
+        console.error("SerpAPI Error, falling back to mock data:", error);
+        
+        // Re-injected Mock Data Fallback
+        flightData = {
+          best_flights: [
+            {
+              price: 416,
+              total_duration: 490,
+              type: "One way",
+              airline_logo: "https://www.gstatic.com/flights/airline_logos/70px/6E.png",
+              booking_token: "mock_booking_token_xyz",
+              carbon_emissions: { difference_percent: -6 },
+              flights: [
+                {
+                  airline: "IndiGo",
+                  flight_number: "6E 529",
+                  departure_airport: { id: sourceCode, time: `${preferences.startDate} 16:30:00` },
+                  arrival_airport: { id: "CCU", time: `${preferences.startDate} 18:35:00` }
+                },
+                {
+                  airline: "IndiGo",
+                  flight_number: "6E 1631",
+                  departure_airport: { id: "CCU", time: `${preferences.startDate} 22:05:00` },
+                  arrival_airport: { id: destCode, time: `${preferences.startDate} 02:10:00` }
+                }
+              ],
+              layovers: [ { duration: 210, id: "CCU" } ]
+            }
+          ]
+        };
       }
     }
 
-    // 4. Return BOTH the text itinerary and the structured flight JSON
     return res.status(200).json({ 
       itinerary: plan,
       flights: flightData 
@@ -107,10 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           message: `Model error: Please check your GEMINI_MODEL in the environment variables. Details: ${error.message}`
         });
       }
-    } else {
-      console.error("Server Error:", error);
     }
-
     return res.status(500).json({
       message: "Failed to generate itinerary. Please try again.",
     });

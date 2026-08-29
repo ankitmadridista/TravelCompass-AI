@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TravelPreferences } from "@/lib/gemini";
+import { Loader2, Sparkles } from "lucide-react";
 
 interface TravelFormProps {
   onSubmit: (preferences: TravelPreferences) => void;
@@ -36,6 +37,7 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
           <Input
             id="source"
             required
+            autoComplete="off"
             value={preferences.source}
             onChange={(e) =>
               setPreferences({ ...preferences, source: e.target.value })
@@ -48,6 +50,7 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
           <Input
             id="destination"
             required
+            autoComplete="off"
             value={preferences.destination}
             onChange={(e) =>
               setPreferences({ ...preferences, destination: e.target.value })
@@ -61,6 +64,7 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
             id="startDate"
             type="date"
             required
+            className="dark:[color-scheme:dark]"
             value={preferences.startDate}
             onChange={(e) =>
               setPreferences({ ...preferences, startDate: e.target.value })
@@ -73,6 +77,7 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
             id="endDate"
             type="date"
             required
+            className="dark:[color-scheme:dark]"
             value={preferences.endDate}
             onChange={(e) =>
               setPreferences({ ...preferences, endDate: e.target.value })
@@ -83,6 +88,7 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
           <Label htmlFor="budget">Budget</Label>
           <Input
             id="budget"
+            autoComplete="off"
             required
             value={preferences.budget}
             onChange={(e) =>
@@ -141,10 +147,20 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
       </div>
       <Button
         type="submit"
-        className="w-full"
+        className="w-full h-12 text-base font-semibold group relative overflow-hidden transition-all duration-300 shadow-md hover:shadow-lg hover:bg-blue-600 hover:text-white hover:shadow-blue-500/25 active:scale-[0.98]"
         disabled={isLoading}
       >
-        {isLoading ? "Generating Plan..." : "Plan My Trip"}
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-5 w-5 animate-spin text-inherit opacity-80" />
+            Generating Itinerary...
+          </>
+        ) : (
+          <>
+            <Sparkles className="mr-2 h-5 w-5 text-inherit opacity-80 group-hover:animate-pulse group-hover:text-blue-100" />
+            Plan My Trip
+          </>
+        )}
       </Button>
     </form>
   );

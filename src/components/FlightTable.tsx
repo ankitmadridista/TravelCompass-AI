@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plane, Clock, ArrowRight, ExternalLink, Leaf } from 'lucide-react';
-// Import types directly from the source of truth to avoid circular dependencies
 import type { FlightData, FlightOption } from '../lib/gemini'; 
 
 interface FlightTableProps {
@@ -28,65 +27,60 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
     });
   };
 
-  // Strictly typed the flight parameter
   const generateBookingUrl = (flight: FlightOption) => {
     const departure = flight.flights[0]?.departure_airport?.id;
     const arrival = flight.flights[flight.flights.length - 1]?.arrival_airport?.id;
-    
-    // Safely extract the date
     const timeString = flight.flights[0]?.departure_airport?.time;
     const date = timeString ? timeString.split(' ')[0] : '';
     
     if (departure && arrival && date) {
       return `https://www.google.com/flights?hl=en#flt=${departure}.${arrival}.${date}`;
     }
-    
-    // Fallback if SerpAPI is missing airport IDs
     return "https://www.google.com/flights";
   };
 
-  if (!flightData?.best_flights?.length) {
-    return null;
-  }
+  if (!flightData?.best_flights?.length) return null;
 
   return (
-    <Card className="w-full shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-2">
-          <Plane className="h-5 w-5 text-orange-500" />
-          <CardTitle className="text-xl text-gray-800">Available Flights</CardTitle>
+    <Card className="w-full shadow-lg border border-border bg-card/50 backdrop-blur-sm overflow-hidden">
+      <CardHeader className="border-b border-border/50 bg-muted/30 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-orange-500/10 p-2 rounded-lg">
+            <Plane className="h-6 w-6 text-orange-500" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-foreground">Available Flights</CardTitle>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Airline</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Emissions</TableHead>
-                <TableHead>Action</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Airline</TableHead>
+                <TableHead className="text-muted-foreground">Route</TableHead>
+                <TableHead className="text-muted-foreground">Duration</TableHead>
+                <TableHead className="text-muted-foreground">Price</TableHead>
+                <TableHead className="text-muted-foreground">Emissions</TableHead>
+                <TableHead className="text-muted-foreground">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {flightData.best_flights.slice(0, 10).map((flightOption, index) => (
-                <TableRow key={index} className="hover:bg-gray-50">
+                <TableRow key={index} className="hover:bg-muted/50 border-border">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {flightOption.airline_logo && (
                         <img 
                           src={flightOption.airline_logo} 
                           alt="Airline" 
-                          className="w-8 h-8 rounded"
+                          className="w-8 h-8 rounded bg-white p-0.5"
                         />
                       )}
                       <div>
-                        <p className="font-medium text-gray-800">
+                        <p className="font-medium text-foreground">
                           {flightOption.flights[0]?.airline || 'Unknown Airline'}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {flightOption.type}
                         </p>
                       </div>
@@ -97,16 +91,15 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                     <div className="space-y-1">
                       {flightOption.flights?.map((flight, flightIndex) => (
                         <div key={flightIndex} className="flex items-center gap-2 text-sm">
-                          <span className="font-medium">{flight.departure_airport?.id}</span>
-                          <span className="text-gray-500">{formatTime(flight.departure_airport?.time)}</span>
-                          <ArrowRight className="h-3 w-3 text-gray-400" />
-                          <span className="font-medium">{flight.arrival_airport?.id}</span>
-                          <span className="text-gray-500">{formatTime(flight.arrival_airport?.time)}</span>
+                          <span className="font-medium text-foreground">{flight.departure_airport?.id}</span>
+                          <span className="text-muted-foreground">{formatTime(flight.departure_airport?.time)}</span>
+                          <ArrowRight className="h-3 w-3 text-muted-foreground/50" />
+                          <span className="font-medium text-foreground">{flight.arrival_airport?.id}</span>
+                          <span className="text-muted-foreground">{formatTime(flight.arrival_airport?.time)}</span>
                         </div>
                       ))}
-                      {/* Safely check for layovers array */}
                       {(flightOption.layovers?.length ?? 0) > 0 && (
-                        <div className="flex items-center gap-1 text-xs text-yellow-600">
+                        <div className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-500">
                           <Clock className="h-3 w-3" />
                           <span>
                             {flightOption.layovers.length} layover{flightOption.layovers.length > 1 ? 's' : ''}
@@ -118,9 +111,9 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                   
                   <TableCell>
                     <div className="text-sm">
-                      <p className="font-medium">{formatDuration(flightOption.total_duration)}</p>
+                      <p className="font-medium text-foreground">{formatDuration(flightOption.total_duration)}</p>
                       {(flightOption.layovers?.length ?? 0) > 0 && (
-                        <p className="text-gray-500 text-xs">
+                        <p className="text-muted-foreground text-xs">
                           {formatDuration(flightOption.layovers[0]?.duration ?? 0)} layover
                         </p>
                       )}
@@ -129,15 +122,14 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                   
                   <TableCell>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-green-600">
+                      <p className="text-lg font-bold text-green-600 dark:text-green-500">
                         ${flightOption.price}
                       </p>
-                      <p className="text-xs text-gray-500">per person</p>
+                      <p className="text-xs text-muted-foreground">per person</p>
                     </div>
                   </TableCell>
                   
                   <TableCell>
-                    {/* Safely check if carbon_emissions object exists before rendering */}
                     {flightOption.carbon_emissions ? (
                       <div className="flex items-center gap-1">
                         <Leaf className="h-3 w-3 text-green-500" />
@@ -145,8 +137,8 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                           variant="outline" 
                           className={`text-xs ${
                             (flightOption.carbon_emissions.difference_percent ?? 0) > 0 
-                              ? 'text-red-600 border-red-200' 
-                              : 'text-green-600 border-green-200'
+                              ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50' 
+                              : 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-900/50'
                           }`}
                         >
                           {(flightOption.carbon_emissions.difference_percent ?? 0) > 0 ? '+' : ''}
@@ -154,7 +146,7 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                         </Badge>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-400">N/A</span>
+                      <span className="text-xs text-muted-foreground">N/A</span>
                     )}
                   </TableCell>
                   
@@ -174,14 +166,6 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
             </TableBody>
           </Table>
         </div>
-        
-        {flightData.best_flights.length > 10 && (
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
-              Showing top 10 flights out of {flightData.best_flights.length} available options
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
