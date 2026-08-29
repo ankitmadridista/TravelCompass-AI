@@ -4,7 +4,6 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { useToast } from "./ui/use-toast";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Message {
   role: "user" | "assistant";
@@ -22,27 +21,18 @@ export function Chat({ itinerary }: ChatProps) {
   const { toast } = useToast();
 
   const generateResponse = async (userInput: string) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Please set your Gemini API key in the settings");
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itinerary, userInput }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to get response from server");
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" }); // Updated to latest model
-
-    const prompt = `You are a helpful travel assistant. The user has the following itinerary:
-
-${itinerary}
-
-Their question is: ${userInput}
-
-Please provide a helpful, concise response focusing on the specific information they're asking about.
-If they ask about activities, destinations, or timing, reference specific details from their itinerary.
-Keep responses friendly but focused on the actual itinerary details.`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    const data = await res.json();
+    return data.response;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,15 +50,11 @@ Keep responses friendly but focused on the actual itinerary details.`;
         role: "assistant",
         content: response,
       };
-
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       toast({
         title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to get a response. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get a response. Please try again.",
         variant: "destructive",
       });
     } finally {
