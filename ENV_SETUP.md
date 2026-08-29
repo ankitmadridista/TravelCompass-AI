@@ -23,7 +23,7 @@ If you prefer, you can set default API keys via environment variables:
 
 2. Edit `.env.local` and add your actual API keys:
    - **VITE_GEMINI_API_KEY**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - **VITE_SERPAPI_API_KEY**: Get from [SerpAPI Dashboard](https://serpapi.com/manage-api-key)
+   - **VITE_SERP_API_KEY**: Get from [SerpAPI Dashboard](https://serpapi.com/manage-api-key)
 
 3. The `.env.local` file is gitignored and won't be committed
 
@@ -33,7 +33,7 @@ If you prefer, you can set default API keys via environment variables:
 2. Navigate to **Project > Settings > Environment Variables**
 3. Add the following variables:
    - `VITE_GEMINI_API_KEY`
-   - `VITE_SERPAPI_API_KEY`
+   - `VITE_SERP_API_KEY`
 
 ## Important Notes
 

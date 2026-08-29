@@ -6,7 +6,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function hasValidString(val: string) {
-
   return (
     val !== null &&
     val.trim() !== "" &&
@@ -15,22 +14,7 @@ export function hasValidString(val: string) {
   );
 }
 
+// Button will no longer be disabled looking for keys!
 export function shouldDisableButton() {
-  const geminiAPIKey = localStorage.getItem("GEMINI_API_KEY");
-  const serpAPIKey = localStorage.getItem("SERPAPI_KEY");
-
-  const isInvalid = (key: string) => {
-    if (!key) return true;
-
-    const trimmed = key.trim().toLowerCase();
-
-    return (
-      trimmed === "" ||
-      trimmed === "null" ||
-      trimmed === "undefined"
-    );
-  };
-
-  // Disable if ANY key is invalid
-  return isInvalid(geminiAPIKey) || isInvalid(serpAPIKey);
+  return false; 
 }

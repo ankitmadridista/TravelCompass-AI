@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   const { departure_id, arrival_id, outbound_date, api_key } = req.query;
   
-  const serpApiKey = api_key || process.env.VITE_SERPAPI_API_KEY;
+  const serpApiKey = api_key || process.env.VITE_SERP_API_KEY;
   
   if (!serpApiKey) {
     return res.status(400).json({ error: 'API key is required' });

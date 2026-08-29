@@ -1,5 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 export type TravelPreferences = {
   source: string;
   destination: string;
@@ -11,391 +9,80 @@ export type TravelPreferences = {
   includeTransportation?: boolean;
 };
 
-export type Airport = {
-  name: string;
+// Strict typing for SerpAPI Flight Data
+export interface AirportInfo {
   id: string;
   time: string;
-};
-
-export type Flight = {
-  departure_airport: Airport;
-  arrival_airport: Airport;
-  duration: number;
-  airplane: string;
-  airline: string;
-  airline_logo: string;
-  travel_class: string;
-  flight_number: string;
-  legroom: string;
-  extensions: string[];
-  overnight?: boolean;
-};
-
-export type BestFlight = {
-  flights: Flight[];
-  layovers?: {
-    duration: number;
-    name: string;
-    id: string;
-  }[];
-  total_duration: number;
-  carbon_emissions: {
-    this_flight: number;
-    typical_for_this_route: number;
-    difference_percent: number;
-  };
-  price: number;
-  type: string;
-  airline_logo: string;
-  booking_token: string;
-};
-
-async function fetchFlights(source: string, destination: string, date: string) {
-  const apiKey = localStorage.getItem("SERPAPI_KEY") || import.meta.env.VITE_SERPAPI_API_KEY;
-  if (!apiKey) {
-    throw new Error("SerpAPI key not found. Please add it in settings.");
-  }
-
-  // Convert city names to airport codes (basic mapping)
-  const airportCodes: { [key: string]: string } = {
-    'mumbai': 'BOM',
-    'delhi': 'DEL',
-    'bangalore': 'BLR',
-    'chennai': 'MAA',
-    'kolkata': 'CCU',
-    'hyderabad': 'HYD',
-    'pune': 'PNQ',
-    'ahmedabad': 'AMD',
-    'goa': 'GOI',
-    'kochi': 'COK',
-    'new york': 'JFK',
-    'los angeles': 'LAX',
-    'chicago': 'ORD',
-    'miami': 'MIA',
-    'san francisco': 'SFO',
-    'seattle': 'SEA',
-    'boston': 'BOS',
-    'washington': 'DCA',
-    'atlanta': 'ATL',
-    'denver': 'DEN',
-    'london': 'LHR',
-    'paris': 'CDG',
-    'amsterdam': 'AMS',
-    'frankfurt': 'FRA',
-    'zurich': 'ZUR',
-    'dubai': 'DXB',
-    'singapore': 'SIN',
-    'bangkok': 'BKK',
-    'tokyo': 'NRT',
-    'seoul': 'ICN',
-    'hong kong': 'HKG',
-    'beijing': 'PEK',
-    'shanghai': 'PVG',
-    'bali': 'DPS',
-    'kuala lumpur': 'KUL',
-    'jakarta': 'CGK',
-    'manila': 'MNL',
-    'sydney': 'SYD',
-    'melbourne': 'MEL',
-    'perth': 'PER',
-    'auckland': 'AKL',
-    'toronto': 'YYZ',
-    'vancouver': 'YVR',
-    'montreal': 'YUL',
-    'sao paulo': 'GRU',
-    'rio de janeiro': 'GIG',
-    'buenos aires': 'EZE',
-    'mexico city': 'MEX',
-    'cairo': 'CAI',
-    'johannesburg': 'JNB',
-    'cape town': 'CPT',
-    'nairobi': 'NBO',
-    'lagos': 'LOS',
-    'casablanca': 'CMN',
-    'istanbul': 'IST',
-    'moscow': 'SVO',
-    'rome': 'FCO',
-    'madrid': 'MAD',
-    'barcelona': 'BCN',
-    'vienna': 'VIE',
-    'prague': 'PRG',
-    'budapest': 'BUD',
-    'warsaw': 'WAW'
-    // Add more mappings as needed
-  };
-
-  const sourceCode = airportCodes[source.toLowerCase()] || source.toUpperCase();
-  const destCode =
-    airportCodes[destination.toLowerCase()] || destination.toUpperCase();
-
-  // Use serverless function to avoid CORS
-  // In production (Vercel), use relative path. In local dev, use localhost
-  const isProduction = window.location.hostname !== 'localhost';
-  const functionUrl = isProduction 
-    ? `/.netlify/functions/flights?departure_id=${sourceCode}&arrival_id=${destCode}&outbound_date=${date}&api_key=${apiKey}`
-    : `http://localhost:3001/.netlify/functions/flights?departure_id=${sourceCode}&arrival_id=${destCode}&outbound_date=${date}&api_key=${apiKey}`;
-
-  try {
-    const response = await fetch(functionUrl);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.best_flights || [];
-  } catch (error) {
-    console.error("Error fetching flights:", error);
-    // Return mock data as fallback
-    return [
-      {
-        price: 298,
-        total_duration: 240,
-        flights: [{ airline: "Vietjet", flight_number: "VJ 972" }],
-        booking_token:
-          "WyJDalJJVjFORk5VWlpPSEZwTWsxQlFrcDZhSGRDUnkwdExTMHRMUzB0TFhaMGJuY3lNRUZCUVVGQlIyVnJXWFJOVFdKdmNEUkJFZ1ZXU2prM01ob0xDTm5vQVJBQ0dnTlZVMFE0SEhEWjZBRT0iLFtbIkRFTCIsIjIwMjUtMDItMDciLCJIQU4iLG51bGwsIlZKIiwiOTcyIl1dXQ==",
-      },
-      {
-        flights: [
-          {
-            departure_airport: {
-              name: "Indira Gandhi International Airport",
-              id: "DEL",
-              time: "2025-02-07 16:30",
-            },
-            arrival_airport: {
-              name: "Netaji Subhash Chandra Bose International Airport",
-              id: "CCU",
-              time: "2025-02-07 18:35",
-            },
-            duration: 125,
-            airplane: "Airbus A321neo",
-            airline: "IndiGo",
-            airline_logo:
-              "https://www.gstatic.com/flights/airline_logos/70px/6E.png",
-            travel_class: "Economy",
-            flight_number: "6E 529",
-            legroom: "29 in",
-            extensions: [
-              "Below average legroom (29 in)",
-              "Carbon emissions estimate: 92 kg",
-            ],
-          },
-          {
-            departure_airport: {
-              name: "Netaji Subhash Chandra Bose International Airport",
-              id: "CCU",
-              time: "2025-02-07 22:05",
-            },
-            arrival_airport: {
-              name: "Noi Bai International Airport",
-              id: "HAN",
-              time: "2025-02-08 02:10",
-            },
-            duration: 155,
-            airplane: "Airbus A321neo",
-            airline: "IndiGo",
-            airline_logo:
-              "https://www.gstatic.com/flights/airline_logos/70px/6E.png",
-            travel_class: "Economy",
-            flight_number: "6E 1631",
-            legroom: "29 in",
-            extensions: [
-              "Below average legroom (29 in)",
-              "Carbon emissions estimate: 117 kg",
-            ],
-            overnight: true,
-          },
-        ],
-        layovers: [
-          {
-            duration: 210,
-            name: "Netaji Subhash Chandra Bose International Airport",
-            id: "CCU",
-          },
-        ],
-        total_duration: 490,
-        carbon_emissions: {
-          this_flight: 210000,
-          typical_for_this_route: 223000,
-          difference_percent: -6,
-        },
-        price: 416,
-        type: "One way",
-        airline_logo:
-          "https://www.gstatic.com/flights/airline_logos/70px/6E.png",
-        booking_token:
-          "WyJDalJJVjFORk5VWlpPSEZwTWsxQlFrcDZhSGRDUnkwdExTMHRMUzB0TFhaMGJuY3lNRUZCUVVGQlIyVnJXWFJOVFdKdmNEUkJFZ3cyUlRVeU9YdzJSVEUyTXpFYUN3alB4QUlRQWhvRFZWTkVPQnh3ejhRQyIsW1siREVMIiwiMjAyNS0wMi0wNyIsIkNDVSIsbnVsbCwiNkUiLCI1MjkiXSxbIkNDVSIsIjIwMjUtMDItMDciLCJIQU4iLG51bGwsIjZFIiwiMTYzMSJdXV0=",
-      },
-    ];
-  }
+  name?: string;
 }
 
-export async function generateTravelPlan(preferences: TravelPreferences) {
-  const apiKey = localStorage.getItem("GEMINI_API_KEY") || import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("Gemini API key not found. Please add it in settings.");
-  }
-  
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+export interface FlightSegment {
+  airline: string;
+  flight_number: string;
+  departure_airport: AirportInfo;
+  arrival_airport: AirportInfo;
+  duration?: number;
+}
 
-  const prompt = `Act as a travel planning expert. Create a detailed travel itinerary based on the following preferences:
-    - Traveling from: ${preferences.source}
-    - Destination: ${preferences.destination}
-    - Dates: ${preferences.startDate} to ${preferences.endDate}
-    - Budget: ${preferences.budget}
-    - Number of Travelers: ${preferences.travelers}
-    - Interests: ${preferences.interests}
+export interface FlightOption {
+  type: string;
+  price: number;
+  total_duration: number;
+  airline_logo: string;
+  booking_token: string;
+  flights: FlightSegment[];
+  layovers: Array<{ duration: number; id?: string; name?: string }>;
+  carbon_emissions: {
+    difference_percent: number;
+    this_flight?: number;
+    typical_for_this_route?: number;
+  };
+}
 
-    Please provide:
-    1. Daily itinerary with timings
-    2. Estimated costs for activities
-    3. Recommended accommodations
-    4. Travel tips and recommendations
-    5. Must-visit places based on interests
-    ${
-      preferences.includeTransportation
-        ? "6. Transportation options and recommendations"
-        : ""
-    }
+export interface FlightData {
+  best_flights: FlightOption[];
+}
 
-    Format the response in a clear, organized way.`;
+export interface TravelPlanResult {
+  itinerary: string;
+  flights: FlightData | null;
+}
 
+// API Response interface to type the JSON payload safely
+interface ApiResponse {
+  itinerary: string;
+  flights?: FlightData;
+  message?: string;
+}
+
+export async function generateTravelPlan(preferences: TravelPreferences): Promise<TravelPlanResult> {
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let plan = response.text();
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(preferences),
+    });
 
-    // If transportation details are requested, fetch real flight data
-    if (preferences.includeTransportation) {
-      plan += "\n\n## Available Flights\n\n";
-      try {
-        const flights = await fetchFlights(
-          preferences.source,
-          preferences.destination,
-          preferences.startDate
-        );
+    const data = (await response.json()) as ApiResponse;
 
-        flights.forEach((flight: BestFlight, index: number) => {
-          plan += `### Option ${index + 1}\n`;
-          plan += `- Price: $${flight.price}\n`;
-          plan += `- Duration: ${flight.total_duration}\n`;
-          plan += `- Airline: ${flight.flights[0].airline}\n`;
-          plan += `- Flight Number: ${flight.flights[0].flight_number}\n`;
-          plan += `- booking_token: ${flight.booking_token}\n\n`;
-        });
-      } catch (error) {
-        console.error("Error fetching flights:", error);
-        // Fallback to mock data if API call fails
-        const mockFlights = [
-          {
-            price: 298,
-            total_duration: 240,
-            flights: [{ airline: "Vietjet", flight_number: "VJ 972" }],
-            booking_token:
-              "WyJDalJJVjFORk5VWlpPSEZwTWsxQlFrcDZhSGRDUnkwdExTMHRMUzB0TFhaMGJuY3lNRUZCUVVGQlIyVnJXWFJOVFdKdmNEUkJFZ1ZXU2prM01ob0xDTm5vQVJBQ0dnTlZVMFE0SEhEWjZBRT0iLFtbIkRFTCIsIjIwMjUtMDItMDciLCJIQU4iLG51bGwsIlZKIiwiOTcyIl1dXQ==",
-          },
-          {
-            flights: [
-              {
-                departure_airport: {
-                  name: "Indira Gandhi International Airport",
-                  id: "DEL",
-                  time: "2025-02-07 16:30",
-                },
-                arrival_airport: {
-                  name: "Netaji Subhash Chandra Bose International Airport",
-                  id: "CCU",
-                  time: "2025-02-07 18:35",
-                },
-                duration: 125,
-                airplane: "Airbus A321neo",
-                airline: "IndiGo",
-                airline_logo:
-                  "https://www.gstatic.com/flights/airline_logos/70px/6E.png",
-                travel_class: "Economy",
-                flight_number: "6E 529",
-                legroom: "29 in",
-                extensions: [
-                  "Below average legroom (29 in)",
-                  "Carbon emissions estimate: 92 kg",
-                ],
-              },
-              {
-                departure_airport: {
-                  name: "Netaji Subhash Chandra Bose International Airport",
-                  id: "CCU",
-                  time: "2025-02-07 22:05",
-                },
-                arrival_airport: {
-                  name: "Noi Bai International Airport",
-                  id: "HAN",
-                  time: "2025-02-08 02:10",
-                },
-                duration: 155,
-                airplane: "Airbus A321neo",
-                airline: "IndiGo",
-                airline_logo:
-                  "https://www.gstatic.com/flights/airline_logos/70px/6E.png",
-                travel_class: "Economy",
-                flight_number: "6E 1631",
-                legroom: "29 in",
-                extensions: [
-                  "Below average legroom (29 in)",
-                  "Carbon emissions estimate: 117 kg",
-                ],
-                overnight: true,
-              },
-            ],
-            layovers: [
-              {
-                duration: 210,
-                name: "Netaji Subhash Chandra Bose International Airport",
-                id: "CCU",
-              },
-            ],
-            total_duration: 490,
-            carbon_emissions: {
-              this_flight: 210000,
-              typical_for_this_route: 223000,
-              difference_percent: -6,
-            },
-            price: 416,
-            type: "One way",
-            airline_logo:
-              "https://www.gstatic.com/flights/airline_logos/70px/6E.png",
-            booking_token:
-              "WyJDalJJVjFORk5VWlpPSEZwTWsxQlFrcDZhSGRDUnkwdExTMHRMUzB0TFhaMGJuY3lNRUZCUVVGQlIyVnJXWFJOVFdKdmNEUkJFZ3cyUlRVeU9YdzJSVEUyTXpFYUN3alB4QUlRQWhvRFZWTkVPQnh3ejhRQyIsW1siREVMIiwiMjAyNS0wMi0wNyIsIkNDVSIsbnVsbCwiNkUiLCI1MjkiXSxbIkNDVSIsIjIwMjUtMDItMDciLCJIQU4iLG51bGwsIjZFIiwiMTYzMSJdXV0=",
-          },
-        ];
-
-        mockFlights.forEach((flight, index) => {
-          plan += `### Option ${index + 1}\n`;
-          plan += `- Price: $${flight.price}\n`;
-          plan += `- Duration: ${flight.total_duration}\n`;
-          plan += `- Airline: ${flight.flights[0].airline}\n`;
-          plan += `- Flight Number: ${flight.flights[0].flight_number}\n`;
-          plan += `- booking_token: ${flight.booking_token}\n\n`;
-        });
-      }
+    if (!response.ok) {
+      // This will catch our 429 Rate Limit error or 500 Server errors
+      throw new Error(data.message || 'Failed to generate travel plan');
     }
 
-    return plan;
+    return {
+      itinerary: data.itinerary,
+      flights: data.flights || null,
+    };
   } catch (error: unknown) {
     console.error("Error generating travel plan:", error);
-
-    let message = "Failed to generate travel plan. Please try again.";
-
+    
     if (error instanceof Error) {
-      // Gemini SDK puts the real API message inside error.message
-      if (error.message.includes("API key not valid")) {
-        message = "API key not valid. Please check your Gemini API key.";
-      } else {
-        message = error.message;
-      }
+      throw new Error(error.message);
     }
-
-    throw new Error(message);
+    
+    throw new Error("An unexpected error occurred while connecting to the server.");
   }
 }

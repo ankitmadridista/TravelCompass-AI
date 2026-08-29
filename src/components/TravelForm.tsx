@@ -5,9 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TravelPreferences } from "@/lib/gemini";
-import { shouldDisableButton as isGeneratePlanDisabled } from "@/lib/utils";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { Settings, XCircle } from "lucide-react";
 
 interface TravelFormProps {
   onSubmit: (preferences: TravelPreferences) => void;
@@ -105,7 +102,7 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
             onChange={(e) =>
               setPreferences({
                 ...preferences,
-                travelers: parseInt(e.target.value),
+                travelers: parseInt(e.target.value) || 1,
               })
             }
           />
@@ -145,27 +142,10 @@ export function TravelForm({ onSubmit, isLoading }: TravelFormProps) {
       <Button
         type="submit"
         className="w-full"
-        disabled={isLoading || isGeneratePlanDisabled()}
+        disabled={isLoading}
       >
         {isLoading ? "Generating Plan..." : "Plan My Trip"}
       </Button>
-
-      {isGeneratePlanDisabled() && (
-        <Alert variant="destructive" icon={<XCircle className="h-5 w-5" />}>
-          <div className="flex flex-col gap-1 sm:gap-2">
-            <AlertTitle className="text-sm sm:text-base">
-              Error: API key(s) are missing
-            </AlertTitle>
-
-            <AlertDescription className="text-xs sm:text-sm leading-relaxed">
-              Configure your API keys for the travel planner to generate a plan.
-              Click on the{" "}
-              <Settings className="h-4 w-4 inline align-text-bottom" /> and save
-              your API keys.
-            </AlertDescription>
-          </div>
-        </Alert>
-      )}
     </form>
   );
 }

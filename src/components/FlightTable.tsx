@@ -1,11 +1,11 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plane, Clock, ArrowRight, ExternalLink, Leaf } from 'lucide-react';
-import type { FlightData } from '../pages/Index';
+// Import types directly from the source of truth to avoid circular dependencies
+import type { FlightData, FlightOption } from '../lib/gemini'; 
 
 interface FlightTableProps {
   flightData: FlightData;
@@ -19,6 +19,7 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
   };
 
   const formatTime = (timeString: string) => {
+    if (!timeString) return '';
     const date = new Date(timeString);
     return date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
@@ -27,13 +28,21 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
     });
   };
 
-  const generateBookingUrl = (flight: any) => {
-    // Generate a generic Google Flights URL for booking
+  // Strictly typed the flight parameter
+  const generateBookingUrl = (flight: FlightOption) => {
     const departure = flight.flights[0]?.departure_airport?.id;
     const arrival = flight.flights[flight.flights.length - 1]?.arrival_airport?.id;
-    const date = flight.flights[0]?.departure_airport?.time?.split(' ')[0];
     
-    return `https://www.google.com/flights?hl=en#flt=${departure}.${arrival}.${date}`;
+    // Safely extract the date
+    const timeString = flight.flights[0]?.departure_airport?.time;
+    const date = timeString ? timeString.split(' ')[0] : '';
+    
+    if (departure && arrival && date) {
+      return `https://www.google.com/flights?hl=en#flt=${departure}.${arrival}.${date}`;
+    }
+    
+    // Fallback if SerpAPI is missing airport IDs
+    return "https://www.google.com/flights";
   };
 
   if (!flightData?.best_flights?.length) {
@@ -66,14 +75,16 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                 <TableRow key={index} className="hover:bg-gray-50">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <img 
-                        src={flightOption.airline_logo} 
-                        alt="Airline" 
-                        className="w-8 h-8 rounded"
-                      />
+                      {flightOption.airline_logo && (
+                        <img 
+                          src={flightOption.airline_logo} 
+                          alt="Airline" 
+                          className="w-8 h-8 rounded"
+                        />
+                      )}
                       <div>
                         <p className="font-medium text-gray-800">
-                          {flightOption.flights[0]?.airline}
+                          {flightOption.flights[0]?.airline || 'Unknown Airline'}
                         </p>
                         <p className="text-sm text-gray-600">
                           {flightOption.type}
@@ -84,21 +95,21 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                   
                   <TableCell>
                     <div className="space-y-1">
-                      {flightOption.flights.map((flight, flightIndex) => (
+                      {flightOption.flights?.map((flight, flightIndex) => (
                         <div key={flightIndex} className="flex items-center gap-2 text-sm">
-                          <span className="font-medium">{flight.departure_airport.id}</span>
-                          <span className="text-gray-500">{formatTime(flight.departure_airport.time)}</span>
+                          <span className="font-medium">{flight.departure_airport?.id}</span>
+                          <span className="text-gray-500">{formatTime(flight.departure_airport?.time)}</span>
                           <ArrowRight className="h-3 w-3 text-gray-400" />
-                          <span className="font-medium">{flight.arrival_airport.id}</span>
-                          <span className="text-gray-500">{formatTime(flight.arrival_airport.time)}</span>
+                          <span className="font-medium">{flight.arrival_airport?.id}</span>
+                          <span className="text-gray-500">{formatTime(flight.arrival_airport?.time)}</span>
                         </div>
                       ))}
-                      {flightOption.layovers.length > 0 && (
+                      {/* Safely check for layovers array */}
+                      {(flightOption.layovers?.length ?? 0) > 0 && (
                         <div className="flex items-center gap-1 text-xs text-yellow-600">
                           <Clock className="h-3 w-3" />
                           <span>
-                            {flightOption.layovers.length} layover
-                            {flightOption.layovers.length > 1 ? 's' : ''}
+                            {flightOption.layovers.length} layover{flightOption.layovers.length > 1 ? 's' : ''}
                           </span>
                         </div>
                       )}
@@ -108,9 +119,9 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                   <TableCell>
                     <div className="text-sm">
                       <p className="font-medium">{formatDuration(flightOption.total_duration)}</p>
-                      {flightOption.layovers.length > 0 && (
+                      {(flightOption.layovers?.length ?? 0) > 0 && (
                         <p className="text-gray-500 text-xs">
-                          {formatDuration(flightOption.layovers[0].duration)} layover
+                          {formatDuration(flightOption.layovers[0]?.duration ?? 0)} layover
                         </p>
                       )}
                     </div>
@@ -126,20 +137,25 @@ const FlightTable: React.FC<FlightTableProps> = ({ flightData }) => {
                   </TableCell>
                   
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Leaf className="h-3 w-3 text-green-500" />
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs ${
-                          flightOption.carbon_emissions.difference_percent > 0 
-                            ? 'text-red-600 border-red-200' 
-                            : 'text-green-600 border-green-200'
-                        }`}
-                      >
-                        {flightOption.carbon_emissions.difference_percent > 0 ? '+' : ''}
-                        {flightOption.carbon_emissions.difference_percent}%
-                      </Badge>
-                    </div>
+                    {/* Safely check if carbon_emissions object exists before rendering */}
+                    {flightOption.carbon_emissions ? (
+                      <div className="flex items-center gap-1">
+                        <Leaf className="h-3 w-3 text-green-500" />
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${
+                            (flightOption.carbon_emissions.difference_percent ?? 0) > 0 
+                              ? 'text-red-600 border-red-200' 
+                              : 'text-green-600 border-green-200'
+                          }`}
+                        >
+                          {(flightOption.carbon_emissions.difference_percent ?? 0) > 0 ? '+' : ''}
+                          {flightOption.carbon_emissions.difference_percent ?? 0}%
+                        </Badge>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">N/A</span>
+                    )}
                   </TableCell>
                   
                   <TableCell>
