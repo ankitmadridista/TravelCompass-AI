@@ -36,7 +36,7 @@ If you want to set default API keys (not recommended for security):
 2. Navigate to **Settings > Environment Variables**
 3. Add:
    - `VITE_GEMINI_API_KEY` (optional)
-   - `VITE_SERPAPI_API_KEY` (optional)
+   - `VITE_SERP_API_KEY` (optional)
 4. Redeploy
 
 **Note:** Users can still override these by entering their own keys in the Settings UI.

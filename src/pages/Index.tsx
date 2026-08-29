@@ -1,32 +1,41 @@
-
 import { useState } from "react";
 import { TravelForm } from "@/components/TravelForm";
 import { TravelItinerary } from "@/components/TravelItinerary";
-import { generateTravelPlan, TravelPreferences } from "@/lib/gemini";
+import FlightTable from "@/components/FlightTable";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import {
+  generateTravelPlan,
+  TravelPreferences,
+  FlightData,
+} from "@/lib/gemini";
 import { useToast } from "@/components/ui/use-toast";
-import { SettingsDialog } from "@/components/SettingsDialog";
+import { Compass } from "lucide-react";
+
+export type { FlightData };
 
 const Index = () => {
   const [itinerary, setItinerary] = useState("");
+  const [flightData, setFlightData] = useState<FlightData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (preferences: TravelPreferences) => {
     setIsLoading(true);
+    setItinerary("");
+    setFlightData(null);
+
     try {
-      const plan = await generateTravelPlan(preferences);
-      setItinerary(plan);
+      const result = await generateTravelPlan(preferences);
+      setItinerary(result.itinerary);
+      setFlightData(result.flights);
+
       toast({
         title: "Success!",
         description: "Your travel plan has been generated.",
       });
     } catch (error: unknown) {
-      console.log('error',error);
-      let message = "Failed to generate travel plan. Please try again.1";
-
-      if (error instanceof Error) {
-        message = error.message;
-      }
+      let message = "Failed to generate travel plan. Please try again.";
+      if (error instanceof Error) message = error.message;
       toast({
         title: "Error",
         description: message,
@@ -38,22 +47,47 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-travel-secondary/10 to-travel-accent/10">
-      <div className="container py-12">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-travel-primary">
-              TravelCompass AI
-            </h1>
-            <SettingsDialog />
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 relative">
+      <div className="absolute inset-0 dark:bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[radial-gradient(#374151_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.03] dark:opacity-[0.05] pointer-events-none"></div>
+
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="bg-primary/10 p-2 rounded-xl">
+              <Compass className="h-6 w-6 text-primary" />
+            </div>
+            <span className="text-xl font-bold tracking-tight">
+              Adventure AI compass
+            </span>
           </div>
-          <p className="text-center text-gray-600 mb-8">
-            Let AI help you plan your perfect trip
-          </p>
-          <TravelForm onSubmit={handleSubmit} isLoading={isLoading} />
-          <TravelItinerary itinerary={itinerary} />
+          <ThemeToggle />
         </div>
-      </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container py-12 relative z-10">
+        <div className="max-w-4xl mx-auto space-y-10">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              Design your perfect trip with{" "}
+              <span className="text-primary">AI</span>
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Enter your preferences below and let our intelligent engine craft
+              a personalized itinerary, complete with real-time flight data.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border shadow-sm rounded-2xl p-6 md:p-8">
+            <TravelForm isLoading={isLoading} onSubmit={handleSubmit} />
+          </div>
+
+          {itinerary && <TravelItinerary itinerary={itinerary} />}
+          {flightData && flightData.best_flights && (
+            <FlightTable flightData={flightData} />
+          )}
+        </div>
+      </main>
     </div>
   );
 };
