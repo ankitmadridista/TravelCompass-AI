@@ -1,73 +1,91 @@
-# Welcome to your Lovable project
+# Adventure AI compass
 
-## Project info
+An intelligent, full-stack travel planning application. Adventure AI compass uses Google's Gemini AI to craft highly personalized travel itineraries and integrates with SerpAPI to fetch real-time flight data, all wrapped in a modern, dark-mode compatible SaaS interface.
 
-**URL**: https://lovable.dev/projects/6c0b8a67-cb31-424b-8bde-870c64349368
+## 🚀 Tech Stack
 
-## How can I edit this code?
+**Frontend:**
+* Vite + React
+* TypeScript
+* Tailwind CSS + Typography
+* shadcn/ui (Radix UI)
+* next-themes (Dark/Light mode)
 
-There are several ways of editing your application.
+**Backend & Infrastructure:**
+* Vercel Serverless Functions (`/api` routes)
+* Google Gemini AI API (`@google/generative-ai`)
+* SerpAPI (Google Flights data)
+* Vercel KV / Upstash Redis (Rate Limiting)
 
-**Use Lovable**
+## 🔐 Environment Variables
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6c0b8a67-cb31-424b-8bde-870c64349368) and start prompting.
+To run this project, you will need to add the following environment variables to your `.env` file at the root of your project. **Do not use the `VITE_` prefix** for these keys, as they are securely handled by the backend serverless functions.
 
-Changes made via Lovable will be committed automatically to this repo.
+```env
+# Google Gemini API Key (for itinerary generation and chat)
+GEMINI_API_KEY=your_gemini_api_key
 
-**Use your preferred IDE**
+# SerpAPI Key (for live Google Flights data)
+SERP_API_KEY=your_serpapi_key
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Upstash / Vercel KV Database (for IP-based rate limiting)
+KV_REST_API_URL=[https://your-upstash-url.upstash.io](https://your-upstash-url.upstash.io)
+KV_REST_API_TOKEN=your_upstash_token
 ```
 
-**Edit a file directly in GitHub**
+## 💻 Local Development
+Because this project utilizes Vercel Serverless Functions for secure API calls, you should use the Vercel CLI to run the development environment, rather than standard Vite commands.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Install Vercel CLI globally (if you haven't already):
+```bash
+npm i -g vercel
+```
 
-**Use GitHub Codespaces**
+2. Clone the repository and install dependencies:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+git clone <YOUR_GIT_URL>
+cd travelcompass
+npm install
+```
 
-## What technologies are used for this project?
+3. Link the project to Vercel and pull environment variables (Optional):
 
-This project is built with:
+```bash
+vercel link
+vercel env pull .env
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+4. Start the local development server:
 
-## How can I deploy this project?
+```bash
+vercel dev
+```
 
-Simply open [Lovable](https://lovable.dev/projects/6c0b8a67-cb31-424b-8bde-870c64349368) and click on Share -> Publish.
+Note: Do not use npm run dev, as it will not execute the backend /api/generate.ts and /api/chat.ts routes.
 
-## Can I connect a custom domain to my Lovable project?
+## 🌐 Deployment
 
-Yes, you can!
+This project is optimized for deployment on Vercel.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Push your code to a GitHub repository.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+2. Import the repository into your Vercel Dashboard.
+
+3. Navigate to Project Settings > Environment Variables and add all the keys listed in the setup section.
+
+4. If using rate limiting, go to the Storage tab in Vercel and provision a new KV (Upstash Redis) database.
+
+5. Click Deploy.
+
+## ✨ Key Features
+
+* AI Itinerary Generation: Custom daily schedules, budgets, and recommendations powered by Gemini.
+
+* Live Flight Fetching: Real-time integration with Google Flights for accurate routing and pricing.
+
+* Contextual AI Chat: A secure, embedded chat assistant that answers questions based specifically on the generated itinerary.
+
+* Intelligent Rate Limiting: Built-in sliding window rate limiting (via Upstash Redis) to prevent API abuse.
+
+* SaaS UI/UX: Fully responsive design with glassmorphism effects and automatic Dark/Light mode syncing.

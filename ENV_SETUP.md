@@ -1,57 +1,59 @@
 # Environment Variables Setup
 
-## Recommended: Use Settings UI
+## 🔒 Security First
 
-The easiest way to configure API keys is through the Settings icon in the app:
+This application uses a secure serverless architecture. **API keys are never exposed to the browser or stored in localStorage.** All external API calls (Gemini and SerpAPI) are handled securely on the backend via Vercel Serverless Functions.
 
-1. Click the Settings icon (⚙️) in the UI
-2. Enter your API keys:
-   - **Gemini API Key**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - **SerpAPI Key**: Get from [SerpAPI Dashboard](https://serpapi.com/manage-api-key)
-3. Click "Save Settings"
+Do **NOT** use the `VITE_` prefix for your API keys.
 
-Keys are stored in browser localStorage and can be changed anytime.
+## Local Setup
 
-## Alternative: Use Environment Variables (Optional)
-
-If you prefer, you can set default API keys via environment variables:
-
-1. Copy `.env.example` to `.env.local`:
+1. Copy the example environment file to create your local `.env` file:
    ```sh
-   copy .env.example .env.local
+   cp .env.example .env
    ```
+1. Edit ```.env``` and add your actual API keys:
+- **GEMINI_API_KEY:** Get from Google AI Studio
 
-2. Edit `.env.local` and add your actual API keys:
-   - **VITE_GEMINI_API_KEY**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - **VITE_SERP_API_KEY**: Get from [SerpAPI Dashboard](https://serpapi.com/manage-api-key)
+- **SERP_API_KEY:** Get from SerpAPI Dashboard
 
-3. The `.env.local` file is gitignored and won't be committed
+- **KV_REST_API_URL:** Get from your Vercel/Upstash KV Database settings
 
-## For Production/Deployment (Lovable)
+- **KV_REST_API_TOKEN:** Get from your Vercel/Upstash KV Database settings
 
-1. Go to your [Lovable Project Settings](https://lovable.dev/projects/6c0b8a67-cb31-424b-8bde-870c64349368)
-2. Navigate to **Project > Settings > Environment Variables**
-3. Add the following variables:
-   - `VITE_GEMINI_API_KEY`
-   - `VITE_SERP_API_KEY`
+2. The ```.env``` file is gitignored and will never be committed to your repository.
 
-## Important Notes
 
-- Never commit `.env` or `.env.local` files
-- Always use `.env.example` as a template for new developers
-- Vite requires the `VITE_` prefix for environment variables to be exposed to the client
+## Production Setup (Vercel)
+
+To deploy these keys to production:
+
+1. Go to your Vercel Project Dashboard.
+2. Navigate to **Settings > Environment Variables**.
+3. Add ```GEMINI_API_KEY```, ```SERP_API_KEY```, ```KV_REST_API_URL```, and ```KV_REST_API_TOKEN```.
+4. Trigger a new deployment so the serverless functions can access the keys.
 
 
 ## Testing Serverless Functions Locally
 
-Install Netlify CLI:
-```sh
-npm install -g netlify-cli
+Because this project uses backend functions (```/api/generate.ts``` and ```/api/chat.ts```), standard Vite commands (```npm run dev```) will not work for full-stack testing.
+
+Install the Vercel CLI:
+```bash
+npm install -g vercel
 ```
 
-Run locally:
-```sh
-netlify dev
+Link your project and pull environment variables (optional):
+
+```bash
+vercel link
+vercel env pull .env
 ```
 
-This will run both your Vite app and serverless functions together.
+Run the full-stack app locally:
+```bash
+vercel dev
+```
+
+This command spins up both your Vite frontend and your Node.js serverless backend simultaneously.
+
